@@ -16,27 +16,24 @@ namespace ECode.Data
 
 
         public AbstractDatabase(IConnectionManager connectionManager)
+            : this(connectionManager, null, null)
+        {
+
+        }
+
+        public AbstractDatabase(IConnectionManager connectionManager, IShardStrategy shardStrategy)
+            : this(connectionManager, shardStrategy, null)
+        {
+
+        }
+
+        public AbstractDatabase(IConnectionManager connectionManager, IShardStrategy shardStrategy, ISchemaManager schemaManager)
         {
             AssertUtil.ArgumentNotNull(connectionManager, nameof(connectionManager));
 
             this.ConnectionManager = connectionManager;
-        }
-
-
-        public AbstractDatabase SetSchemaManager(ISchemaManager shemaManager)
-        {
-            AssertUtil.ArgumentNotNull(shemaManager, nameof(shemaManager));
-
-            this.SchemaManager = shemaManager;
-            return this;
-        }
-
-        public AbstractDatabase SetShardStrategy(IShardStrategy shardStrategy)
-        {
-            AssertUtil.ArgumentNotNull(shardStrategy, nameof(shardStrategy));
-
             this.ShardStrategy = shardStrategy;
-            return this;
+            this.SchemaManager = schemaManager;
         }
 
 
