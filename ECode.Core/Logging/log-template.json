@@ -1,0 +1,27 @@
+﻿{
+  "logging": {
+    "level": "ERROR",
+    "default": [ "console" ],
+    "loggers": [
+      {
+        "name": "Test",
+        "level": "DEBUG",
+        "appenders": [ "console", "rollfile" ]
+      }
+    ],
+    "appenders": [
+      {
+        "name": "console",
+        "type": "ECode.Logging.ConsoleAppender"
+      },
+      {
+        "name": "rollfile",
+        "type": "ECode.Logging.DateFileAppender",
+        "basedir": "logs/",
+        "pattern": "yyyy/yyyy-MM-dd.'txt'",
+        "interval": 200,
+        "max_queue_size": 10000
+      }
+    ]
+  }
+}

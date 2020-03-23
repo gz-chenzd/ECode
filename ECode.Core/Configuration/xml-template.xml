@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <add name="key1" value="key1-value" />
+  <add name="key2"><![CDATA[key2/value]]></add>
+  <namespace name="namespace1">
+    <add name="key1" value="namespace1-key1-value" />
+    <add name="key2"><![CDATA[namespace1/key2/value]]></add>
+    <namespace name="namespace2">
+      <add name="key1" value="namespace1-namespace2-key1-value" />
+      <add name="key2"><![CDATA[namespace1/namespace2/key2/value]]></add>
+      <namespace name="namespace3">
+        <add name="key1" value="namespace1-namespace2-namespace3-key1-value" />
+        <add name="key2"><![CDATA[namespace1/namespace2/namespace3/key2/value]]></add>
+      </namespace>
+    </namespace>
+  </namespace>
+</configuration>
