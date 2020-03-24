@@ -202,15 +202,9 @@ namespace ECode.Logging
                         }
 
                         loggerInfo.Name = loggerInfo.Name.Trim();
-                        loggerInfo.Level = Level.ALL;
 
                         if (loggerInfo.Appenders == null)
                         { loggerInfo.Appenders = new List<string>(); }
-
-                        if (Enum.TryParse(typeof(Level), loggerInfo.LevelStr, out object resolvedLevel))
-                        { loggerInfo.Level = (Level)resolvedLevel; }
-                        else
-                        { LogLog.Warn($"Logging config: cannot parse '{loggerInfo.LevelStr}' to '{typeof(Level)}'."); }
 
                         namedLoggers[loggerInfo.Name] = loggerInfo;
                     }
