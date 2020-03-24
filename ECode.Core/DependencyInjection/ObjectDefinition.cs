@@ -16,9 +16,8 @@ namespace ECode.DependencyInjection
         private object              singleInstance      = null;
 
         private ConstructorInfo     ctorMethod          = null;
-        private MethodInfo          factoryMethod       = null;
-
         private MethodInfo          initMethod          = null;
+        private MethodInfo          factoryMethod       = null;
 
         private Dictionary<PropertyDefinition, PropertyInfo>    propertyMaps
             = new Dictionary<PropertyDefinition, PropertyInfo>();
@@ -62,6 +61,12 @@ namespace ECode.DependencyInjection
         public List<ArgumentDefinition> ConstructorArgs
         { get; set; } = new List<ArgumentDefinition>();
 
+        public List<ArgumentDefinition> InitializeArgs
+        { get; set; } = new List<ArgumentDefinition>();
+
+        public List<ArgumentDefinition> FactoryArgs
+        { get; set; } = new List<ArgumentDefinition>();
+
         public List<PropertyDefinition> Properties
         { get; set; } = new List<PropertyDefinition>();
 
@@ -78,15 +83,15 @@ namespace ECode.DependencyInjection
 
             if (this.FactoryObject != null)
             {
-                instance = this.factoryMethod.Invoke(this.FactoryObject.GetValue(), GenerateArguments(this.factoryMethod.GetParameters()));
+                instance = this.factoryMethod.Invoke(this.FactoryObject.GetValue(), GenerateArguments(this.factoryMethod.GetParameters(), this.FactoryArgs));
             }
             else if (this.factoryMethod != null)
             {
-                instance = this.factoryMethod.Invoke(null, GenerateArguments(this.factoryMethod.GetParameters()));
+                instance = this.factoryMethod.Invoke(null, GenerateArguments(this.factoryMethod.GetParameters(), this.FactoryArgs));
             }
             else if (this.ctorMethod != null)
             {
-                instance = this.ctorMethod.Invoke(GenerateArguments(this.ctorMethod.GetParameters()));
+                instance = this.ctorMethod.Invoke(GenerateArguments(this.ctorMethod.GetParameters(), this.ConstructorArgs));
             }
             else
             {
@@ -105,7 +110,7 @@ namespace ECode.DependencyInjection
 
             if (this.initMethod != null)
             {
-                this.initMethod.Invoke(instance, null);
+                this.initMethod.Invoke(instance, GenerateArguments(this.initMethod.GetParameters(), this.InitializeArgs));
             }
 
             watch.Stop();
@@ -118,15 +123,15 @@ namespace ECode.DependencyInjection
             return instance;
         }
 
-        private object[] GenerateArguments(ParameterInfo[] parameters)
+        private object[] GenerateArguments(ParameterInfo[] parameters, List<ArgumentDefinition> arguments)
         {
             var paramValues = new List<object>();
             for (int i = 0; i < parameters.Length; i++)
             {
-                var arg = this.ConstructorArgs.Find(t => t.Index.HasValue && t.Index.Value == i);
+                var arg = arguments.Find(t => t.Index.HasValue && t.Index.Value == i);
                 if (arg == null)
                 {
-                    arg = this.ConstructorArgs.Find(t => t.Name == parameters[i].Name);
+                    arg = arguments.Find(t => t.Name == parameters[i].Name);
                 }
 
                 if (arg != null)
@@ -143,24 +148,22 @@ namespace ECode.DependencyInjection
             return paramValues.ToArray();
         }
 
-        private bool ValidateParametersMatched(ParameterInfo[] parameters)
+        private bool ValidateParametersMatched(ParameterInfo[] parameters, List<ArgumentDefinition> arguments)
         {
-            if (this.ConstructorArgs.Count > parameters.Length)
-            {
-                return false;
-            }
+            if (arguments.Count > parameters.Length)
+            { return false; }
 
             bool parametersMatched = true;
             for (int i = 0; i < parameters.Length; i++)
             {
-                var arg = this.ConstructorArgs.Find(t => t.Index.HasValue && t.Index.Value == i);
+                var arg = arguments.Find(t => t.Index.HasValue && t.Index.Value == i);
                 if (arg == null)
                 {
-                    arg = this.ConstructorArgs.Find(t => t.Name == parameters[i].Name);
+                    arg = arguments.Find(t => t.Name == parameters[i].Name);
                 }
-                else if (this.ConstructorArgs.Find(t => t.Name == parameters[i].Name) != null)
+                else if (arguments.Find(t => t.Name == parameters[i].Name) != null)
                 {
-                    // contain name and index conflict
+                    // contains name and index conflict
                     parametersMatched = false;
                     break;
                 }
@@ -230,10 +233,8 @@ namespace ECode.DependencyInjection
                     foreach (var methodInfo in nameMatchedMethods)
                     {
                         var parms = methodInfo.GetParameters();
-                        if (!ValidateParametersMatched(parms))
-                        {
-                            continue;
-                        }
+                        if (!ValidateParametersMatched(parms, this.FactoryArgs))
+                        { continue; }
 
                         this.factoryMethod = methodInfo;
                         break;
@@ -254,10 +255,8 @@ namespace ECode.DependencyInjection
                         foreach (var ctorMethodInfo in ctorMethods)
                         {
                             var parms = ctorMethodInfo.GetParameters();
-                            if (!ValidateParametersMatched(parms))
-                            {
-                                continue;
-                            }
+                            if (!ValidateParametersMatched(parms, this.ConstructorArgs))
+                            { continue; }
 
                             this.ctorMethod = ctorMethodInfo;
                             break;
@@ -308,10 +307,8 @@ namespace ECode.DependencyInjection
                 foreach (var methodInfo in nameMatchedMethods)
                 {
                     var parms = methodInfo.GetParameters();
-                    if (!ValidateParametersMatched(parms))
-                    {
-                        continue;
-                    }
+                    if (!ValidateParametersMatched(parms, this.FactoryArgs))
+                    { continue; }
 
                     this.factoryMethod = methodInfo;
                     break;
@@ -364,10 +361,34 @@ namespace ECode.DependencyInjection
 
             if (!string.IsNullOrWhiteSpace(this.InitMethod))
             {
-                this.initMethod = this.ResolvedType.GetMethod(this.InitMethod, BindingFlags.Instance | BindingFlags.Public);
-                if (this.initMethod.GetParameters().Length > 0)
+                var nameMatchedMethods = new List<MethodInfo>();
+                var methods = this.ResolvedType.GetMethods(BindingFlags.Instance | BindingFlags.Public);
+                foreach (var methodInfo in methods)
                 {
-                    throw new InvalidOperationException($"Doesnot contain empty argument init method '{this.InitMethod}' on type '{this.ResolvedType.FullName}'.");
+                    if (methodInfo.Name == this.InitMethod)
+                    {
+                        nameMatchedMethods.Add(methodInfo);
+                    }
+                }
+
+                if (nameMatchedMethods.Count == 0)
+                {
+                    throw new InvalidOperationException($"Cannot find public instance named method '{this.InitMethod}' on type '{this.ResolvedType.FullName}'.");
+                }
+
+                foreach (var methodInfo in nameMatchedMethods)
+                {
+                    var parms = methodInfo.GetParameters();
+                    if (!ValidateParametersMatched(parms, this.InitializeArgs))
+                    { continue; }
+
+                    this.initMethod = methodInfo;
+                    break;
+                }
+
+                if (this.initMethod == null)
+                {
+                    throw new InvalidOperationException($"Doesnot contain matched named method '{this.InitMethod}' with arguments on type '{this.ResolvedType.FullName}'.");
                 }
             }
         }

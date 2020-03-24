@@ -16,6 +16,8 @@ namespace ECode.DependencyInjection
         const string OBJECT_TAG             = "object";
         const string ALIAS_TAG              = "alias";
         const string CONSTRUCTOR_ARG_TAG    = "constructor-arg";
+        const string FACTORY_ARG_TAG        = "factory-arg";
+        const string INIT_ARG_TAG           = "init-arg";
         const string PROPERTY_TAG           = "property";
         const string LISTENER_TAG           = "listener";
         const string LIST_TAG               = "list";
@@ -762,36 +764,44 @@ namespace ECode.DependencyInjection
                 if (childNode.NodeType == XmlNodeType.Element)
                 {
                     var childElement = (XmlElement)childNode;
-                    if (childElement.LocalName == CONSTRUCTOR_ARG_TAG)
+                    if (childElement.LocalName == CONSTRUCTOR_ARG_TAG
+                        || childElement.LocalName == FACTORY_ARG_TAG
+                        || childElement.LocalName == INIT_ARG_TAG)
                     {
+                        var arguments = definition.ConstructorArgs;
+                        if (childElement.LocalName == FACTORY_ARG_TAG)
+                        { arguments = definition.FactoryArgs; }
+                        else if (childElement.LocalName == INIT_ARG_TAG)
+                        { arguments = definition.InitializeArgs; }
+
                         var arg = ParseArgument(childElement);
                         if (arg.Index.HasValue)
                         {
-                            if (definition.ConstructorArgs.Find(t => t.Index.HasValue && t.Index.Value == arg.Index.Value) != null)
+                            if (arguments.Find(t => t.Index.HasValue && t.Index.Value == arg.Index.Value) != null)
                             {
                                 throw new ConfigurationException($"Argument index '{arg.Index.Value}' duplicate.", element.OuterXml);
                             }
                         }
                         else if (!string.IsNullOrWhiteSpace(arg.Name))
                         {
-                            if (definition.ConstructorArgs.Find(t => t.Name == arg.Name) != null)
+                            if (arguments.Find(t => t.Name == arg.Name) != null)
                             {
                                 throw new ConfigurationException($"Argument name '{arg.Name}' duplicate.", element.OuterXml);
                             }
                         }
                         else
                         {
-                            if (definition.ConstructorArgs.FindAll(t => t.Name != null).Count > 0)
+                            if (arguments.FindAll(t => t.Name != null).Count > 0)
                             {
                                 throw new ConfigurationException($"Argument '{childElement.OuterXml}' doesnot specify name or index after other named arguments.", element.OuterXml);
                             }
                             else
                             {
-                                arg.Index = definition.ConstructorArgs.Count == 0 ? 0 : definition.ConstructorArgs.Last().Index + 1;
+                                arg.Index = arguments.Count == 0 ? 0 : arguments.Last().Index + 1;
                             }
                         }
 
-                        definition.ConstructorArgs.Add(arg);
+                        arguments.Add(arg);
                     }
                     else if (childNode.LocalName == PROPERTY_TAG)
                     {
