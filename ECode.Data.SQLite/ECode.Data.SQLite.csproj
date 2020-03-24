@@ -2,11 +2,20 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <AssemblyVersion>1.2003.2</AssemblyVersion>
-    <FileVersion>1.2003.2</FileVersion>
-    <Version>1.2003.2</Version>
+    <AssemblyVersion>1.2003.3</AssemblyVersion>
+    <FileVersion>1.2003.3</FileVersion>
+    <Version>1.2003.3</Version>
     <Authors>chenzd</Authors>
     <Company>chenzd</Company>
+    <ProjectUrl>https://github.com/gz-chenzd/ECode</ProjectUrl>
+    <Description>
+      <![CDATA[ECode的ORM组件，提供了基于lambda表达式同时又类似于SQL语法的使用模式，支持多种关系型数据库MySQL、MS SQL Server、SQLite等
+
+支持分库分表： 基于策略接口的、自定义规则的分库分表实现
+支持读写分离： 自动根据SQL上下文进行主从选择自由切换
+支持事务： 支持基于ReadCommitted隔离级别的事务
+支持MySQL、MsSQL、SQLite等多种数据库]]>
+    </Description>
   </PropertyGroup>
 
   <ItemGroup>

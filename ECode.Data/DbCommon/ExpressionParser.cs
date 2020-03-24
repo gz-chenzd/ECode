@@ -632,7 +632,7 @@ namespace ECode.Data
                     return ParseLikesMethodCallExpression(fromTables, expressionParameters, commandParameters, expression);
                 }
             }
-            else if (expression.Method.DeclaringType.GetInterface("IList") != null
+            else if (expression.Method.DeclaringType.GetInterface("System.Collections.IEnumerable") != null
                 || expression.Method.DeclaringType == typeof(System.Linq.Enumerable))
             {
                 if (expression.Method.Name == "Contains")
@@ -890,44 +890,39 @@ namespace ECode.Data
                 throw new NotSupportedException();
             }
 
-            if (expression.Method.DeclaringType.GetInterface("IList") != null
+            if (expression.Method.DeclaringType.GetInterface("System.Collections.IEnumerable") != null
                 || expression.Method.DeclaringType == typeof(System.Linq.Enumerable))
             {
-                var objectResult = ParseExpression(fromTables, expressionParameters, commandParameters, expression.Object);
+                var objectResult = ParseExpression(fromTables, expressionParameters, commandParameters, expression.Object == null ? expression.Arguments[0] : expression.Object);
                 if (objectResult.ContainsSql)
-                {
-                    throw new NotSupportedException();
-                }
+                { throw new NotSupportedException(); }
 
-                var argumentResult = ParseExpression(fromTables, expressionParameters, commandParameters, expression.Arguments[0]);
+                var argumentResult = ParseExpression(fromTables, expressionParameters, commandParameters, expression.Object == null ? expression.Arguments[1] : expression.Arguments[0]);
                 if (!argumentResult.ContainsSql)
-                {
-                    return new ParseResult(expression.Method.Invoke(objectResult.Value, new[] { argumentResult.Value }));
-                }
+                { return new ParseResult(expression.Method.Invoke(objectResult.Value, new[] { argumentResult.Value })); }
 
-                var arrayList = objectResult.Value as IList;
-                if (arrayList == null || arrayList.Count <= 0)
-                {
-                    throw new NotSupportedException();
-                }
+                var arrayList = objectResult.Value as IEnumerable;
+                if (arrayList == null)
+                { throw new NotSupportedException(); }
 
+                var isFirst = true;
                 var sb = new StringBuilder();
                 sb.Append($"{argumentResult.Value}");
                 sb.Append((useReverse ? " NOT" : "") + " IN (");
-                for (int i = 0; i < arrayList.Count; i++)
+                foreach (var item in arrayList)
                 {
                     // cannot be null.
-                    if (arrayList[i] == null)
-                    {
-                        throw new NotSupportedException();
-                    }
+                    if (item == null)
+                    { throw new NotSupportedException(); }
 
-                    if (i > 0)
+                    if (!isFirst)
                     { sb.Append(", "); }
+
+                    isFirst = false;
 
                     sb.Append($"@p{commandParameters.Count()}");
 
-                    var parameter = CreateParameter($"@p{commandParameters.Count()}", arrayList[i], argumentResult.DataType);
+                    var parameter = CreateParameter($"@p{commandParameters.Count()}", item, argumentResult.DataType);
                     commandParameters.Add(parameter);
                 }
                 sb.Append(")");

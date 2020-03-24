@@ -2,11 +2,25 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <AssemblyVersion>1.2003.1</AssemblyVersion>
-    <FileVersion>1.2003.1</FileVersion>
-    <Version>1.2003.1</Version>
+    <AssemblyVersion>1.2003.2</AssemblyVersion>
+    <FileVersion>1.2003.2</FileVersion>
+    <Version>1.2003.2</Version>
     <Authors>chenzd</Authors>
     <Company>chenzd</Company>
+    <ProjectUrl>https://github.com/gz-chenzd/ECode</ProjectUrl>
+    <Description>
+      <![CDATA[Core是ECode的核心组件，包含有各种常用的基础类库
+
+缓存： 统一的接口及多个缓存实现 内存缓存、Redis Kv及Memcached
+数据校验： 收录了大部分常用的CRC、MD5、SHA及RSA签名验证等
+数据编码： 收录有Base64、QuotedPrintable、Hex、UrlEncode等
+加解密： 统一的接口及其实现AES、DES
+依赖注入： 一套小巧精致的依赖注入实现
+事件框架： 一套程序内的事件通知机制实现
+日志组件： 类似与Log4Net的实现，主要用于自定义监控使用
+配置管理： 抽象的配置管理，用于管理基于环境变量及程序自身的配置
+其他常用方法： 如类型转换、参数校验、网络调用等等]]>
+    </Description>
   </PropertyGroup>
 
   <ItemGroup>
