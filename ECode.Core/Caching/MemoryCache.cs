@@ -137,7 +137,9 @@ namespace ECode.Caching
             if (First == item)
             { return; }
 
-            item.Previous.Next = item.Next;
+            if (item.Previous != null)
+            { item.Previous.Next = item.Next; }
+
             item.Next.Previous = item.Previous;
 
             item.Next = First;
@@ -425,24 +427,27 @@ namespace ECode.Caching
             AssertUtil.ArgumentNotEmpty(key, nameof(key));
 
 
-            var item = GetItem(key);
-            if (item == null)
-            { return false; }
-
-            ItemsByKey.Remove(key);
-
-            if (item == First)
+            if (ItemsByKey.TryGetValue(key, out MemoryCacheItem item))
             {
-                First = item.Next;
-                First.Previous = null;
-            }
-            else
-            {
-                item.Previous.Next = item.Next;
-                item.Next.Previous = item.Previous;
+                ItemsByKey.Remove(key);
+
+                if (item == First)
+                {
+                    First = item.Next;
+                    First.Previous = null;
+                }
+                else
+                {
+                    if (item.Previous != null)
+                    { item.Previous.Next = item.Next; }
+
+                    item.Next.Previous = item.Previous;
+                }
+
+                return !item.IsExpired;
             }
 
-            return true;
+            return false;
         }
 
 

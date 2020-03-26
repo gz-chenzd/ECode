@@ -250,40 +250,19 @@ namespace ECode.DependencyInjection
                 else
                 {
                     var ctorMethods = this.ResolvedType.GetConstructors();
-                    if (this.ConstructorArgs.Count > 0)
+                    foreach (var ctorMethodInfo in ctorMethods)
                     {
-                        foreach (var ctorMethodInfo in ctorMethods)
-                        {
-                            var parms = ctorMethodInfo.GetParameters();
-                            if (!ValidateParametersMatched(parms, this.ConstructorArgs))
-                            { continue; }
+                        var parms = ctorMethodInfo.GetParameters();
+                        if (!ValidateParametersMatched(parms, this.ConstructorArgs))
+                        { continue; }
 
-                            this.ctorMethod = ctorMethodInfo;
-                            break;
-                        }
-
-                        if (this.ctorMethod == null)
-                        {
-                            throw new InvalidOperationException("Doesnot contain matched constructor method with arguments.");
-                        }
+                        this.ctorMethod = ctorMethodInfo;
+                        break;
                     }
-                    else if (ctorMethods.Length > 0)
+
+                    if (this.ctorMethod == null)
                     {
-                        foreach (var ctorMethodInfo in ctorMethods)
-                        {
-                            if (ctorMethodInfo.GetParameters().Length > 0)
-                            {
-                                continue;
-                            }
-
-                            this.ctorMethod = ctorMethodInfo;
-                            break;
-                        }
-
-                        if (this.ctorMethod == null)
-                        {
-                            throw new InvalidOperationException("Doesnot contain constructor method with empty arguments.");
-                        }
+                        throw new InvalidOperationException("Doesnot contain matched constructor method with arguments.");
                     }
                 }
             }
