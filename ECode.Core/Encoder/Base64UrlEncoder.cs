@@ -5,7 +5,7 @@ using ECode.Utility;
 
 namespace ECode.Encoder
 {
-    public sealed class UrlBase64Encoder : IEncoder
+    public sealed class Base64UrlEncoder : IEncoder
     {
         public static readonly char[] ENCODE_TABLE = {
             (char)'A', (char)'B', (char)'C', (char)'D', (char)'E', (char)'F', (char)'G',
