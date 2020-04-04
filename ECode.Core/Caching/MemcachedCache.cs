@@ -71,6 +71,9 @@ namespace ECode.Caching
         {
             if (item.Flags == FLAG_JSON)
             {
+                if (targetType == TYPE_STRING)
+                { return Encoding.UTF8.GetString(item.ValueBytes); }
+
                 return JsonUtil.Deserialize(Encoding.UTF8.GetString(item.ValueBytes), targetType);
             }
             else if (item.Flags == FLAG_STRING)

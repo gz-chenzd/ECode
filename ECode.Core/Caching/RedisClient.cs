@@ -339,7 +339,7 @@ namespace ECode.Caching
 
             try
             {
-                SendCommand("EXPIRE", key);
+                SendCommand("EXPIRE", key, ttl.ToString());
 
                 var response = ReadResponse();
                 if (response.Error != null)
@@ -373,6 +373,9 @@ namespace ECode.Caching
                 var response = ReadResponse();
                 if (response.Error != null)
                 { throw new Exception(response.Error); }
+
+                if (response.Value == null)
+                { throw new KeyNotFoundException(); }
 
                 var kvItem  = new RedisKvCacheItem();
                 kvItem.Key = key;
@@ -450,7 +453,7 @@ namespace ECode.Caching
                 if (response.Error != null)
                 { throw new Exception(response.Error); }
 
-                return true;
+                return string.Compare(response.Value as string, "OK", true) == 0;
             }
             catch (SocketException ex)
             {
@@ -472,13 +475,13 @@ namespace ECode.Caching
 
             try
             {
-                SendCommand("SET", key, value, "EX", ttl.ToString(), "XX");
+                SendCommand("SET", key, value, "EX", ttl.ToString());
 
                 var response = ReadResponse();
                 if (response.Error != null)
                 { throw new Exception(response.Error); }
 
-                return true;
+                return string.Compare(response.Value as string, "OK", true) == 0;
             }
             catch (SocketException ex)
             {
@@ -500,120 +503,13 @@ namespace ECode.Caching
 
             try
             {
-                m_pClient.WriteLine($"exists {QuoteString(key)}");
+                SendCommand("SET", key, value, "EX", ttl.ToString(), "XX");
 
-                var line = m_pClient.ReadLine();
-                var ret = m_pReNumber.Match(line);
-                if (ret == null || !ret.Success)
-                {
-                    var items = line.Split(' ', 2);
-                    if (items[0].Equals("-ERR", StringComparison.InvariantCultureIgnoreCase))
-                    { throw new Exception($"Error: {items[1]}"); }
+                var response = ReadResponse();
+                if (response.Error != null)
+                { throw new Exception(response.Error); }
 
-                    throw new NotSupportedException($"Unsupported response: {line}");
-                }
-
-                if (int.Parse(ret.Groups["number"].Value) <= 0)
-                { return false; }
-
-
-                m_pClient.WriteLine($"watch {QuoteString(key)}");
-                line = m_pClient.ReadLine();
-                if (!line.Equals("+OK", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    var items = line.Split(' ', 2);
-                    if (items[0].Equals("-ERR", StringComparison.InvariantCultureIgnoreCase))
-                    { throw new Exception($"Error: {items[1]}"); }
-
-                    return false;
-                }
-
-
-                m_pClient.WriteLine("multi");
-                line = m_pClient.ReadLine();
-                if (!line.Equals("+OK", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    var items = line.Split(' ', 2);
-                    if (items[0].Equals("-ERR", StringComparison.InvariantCultureIgnoreCase))
-                    { throw new Exception($"Error: {items[1]}"); }
-
-                    return false;
-                }
-
-
-                m_pClient.WriteLine($"setex {QuoteString(key)} {ttl} {QuoteString(value)}");
-                line = m_pClient.ReadLine();
-                if (!line.Equals("+QUEUED", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    var items = line.Split(' ', 2);
-                    if (items[0].Equals("-ERR", StringComparison.InvariantCultureIgnoreCase))
-                    { throw new Exception($"Error: {items[1]}"); }
-
-                    return false;
-                }
-
-
-                m_pClient.WriteLine("exec");
-                line = m_pClient.ReadLine();
-                ret = m_pReNumber.Match(line);
-                if (ret == null || !ret.Success)
-                {
-                    var items = line.Split(' ', 2);
-                    if (items[0].Equals("-ERR", StringComparison.InvariantCultureIgnoreCase))
-                    { throw new Exception($"Error: {items[1]}"); }
-
-                    throw new NotSupportedException($"Unsupported response: {line}");
-                }
-
-                if (int.Parse(ret.Groups["number"].Value) <= 0)
-                { return false; }
-
-
-                line = m_pClient.ReadLine();
-                if (!line.Equals("+OK", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    var items = line.Split(' ', 2);
-                    if (items[0].Equals("-ERR", StringComparison.InvariantCultureIgnoreCase))
-                    { throw new Exception($"Error: {items[1]}"); }
-
-                    return false;
-                }
-
-                return true;
-            }
-            catch (SocketException ex)
-            {
-                m_pClient.Dispose();
-                throw ex;
-            }
-            catch (IOException ex)
-            {
-                m_pClient.Dispose();
-                throw ex;
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        public bool Replace2(string key, string value, int ttl)
-        {
-            ThrowIfObjectDisposed();
-            ThrowIfNotConnected();
-
-            try
-            {
-                m_pClient.WriteLine($"EVAL \"if redis.call('EXISTS', KEYS[1]) == 1 then return redis.call('SET', KEYS[1], KEYS[2], 'EX', KEYS[3]) end return nil\" 3 {QuoteString(key)} {QuoteString(value)} {ttl}");
-
-                var line =m_pClient.ReadLine();
-                if (!line.Equals("+OK", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    var items = line.Split(' ', 2);
-                    if (items[0].Equals("-ERR", StringComparison.InvariantCultureIgnoreCase))
-                    { throw new Exception($"Error: {items[1]}"); }
-
-                    return false;
-                }
-
-                return true;
+                return string.Compare(response.Value as string, "OK", true) == 0;
             }
             catch (SocketException ex)
             {

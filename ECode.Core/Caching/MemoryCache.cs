@@ -177,6 +177,9 @@ namespace ECode.Caching
         {
             if (item.ValueType == CacheValueType.Json)
             {
+                if (targetType == TYPE_STRING)
+                { return item.StringValue; }
+
                 return JsonUtil.Deserialize(item.StringValue, targetType);
             }
             else if (item.ValueType == CacheValueType.Plain)

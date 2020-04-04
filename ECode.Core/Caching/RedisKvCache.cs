@@ -63,12 +63,9 @@ namespace ECode.Caching
         {
             if (targetType.IsArray)
             {
-                foreach (var t in targetType.GetInterfaces())
+                if (targetType.GetInterface("System.Collections.Generic.ICollection<byte>", true) != null)
                 {
-                    if (t == typeof(ICollection<byte>))
-                    {
-                        return TypeConversionUtil.ConvertValueIfNecessary(targetType, item.ValueBytes.FromBase64());
-                    }
+                    return TypeConversionUtil.ConvertValueIfNecessary(targetType, item.ValueBytes.FromBase64());
                 }
 
                 return JsonUtil.Deserialize(item.ValueBytes.ToUtf8String(), targetType);

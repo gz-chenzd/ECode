@@ -16,6 +16,16 @@ namespace ECode.Utility
 {
     public class HttpResponse
     {
+        ~HttpResponse()
+        {
+            if (this.Stream != null)
+            {
+                this.Stream.Dispose();
+                this.Stream = null;
+            }
+        }
+
+
         public HttpStatusCode StatusCode
         { get; set; }
 
