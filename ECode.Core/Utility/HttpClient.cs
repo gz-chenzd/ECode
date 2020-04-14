@@ -9,6 +9,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using ECode.IO;
 
@@ -387,6 +388,27 @@ namespace ECode.Utility
             }
             catch (Exception)
             { throw; }
+        }
+
+
+        public static Task<HttpResponse> GetAsync(string url, WebHeaderCollection headers = null, CookieCollection cookies = null, int? timeout = null, ICredentials credentials = null, RequestCachePolicy cachePolicy = null, X509Certificate2 clientCert = null, RemoteCertificateValidationCallback validateCallback = null)
+        {
+            return Task.Run(() => Get(url, headers, cookies, timeout, credentials, cachePolicy, clientCert, validateCallback));
+        }
+
+        public static Task<HttpResponse> PostAsync(string url, Stream content = null, RequestContentType contentType = RequestContentType.NotSpecified, string boundary = null, WebHeaderCollection headers = null, CookieCollection cookies = null, int? timeout = null, ICredentials credentials = null, RequestCachePolicy cachePolicy = null, X509Certificate2 clientCert = null, RemoteCertificateValidationCallback validateCallback = null)
+        {
+            return Task.Run(() => Post(url, content, contentType, boundary, headers, cookies, timeout, credentials, cachePolicy, clientCert, validateCallback));
+        }
+
+        public static Task<HttpResponse> PutAsync(string url, Stream content = null, RequestContentType contentType = RequestContentType.NotSpecified, string boundary = null, WebHeaderCollection headers = null, CookieCollection cookies = null, int? timeout = null, ICredentials credentials = null, RequestCachePolicy cachePolicy = null, X509Certificate2 clientCert = null, RemoteCertificateValidationCallback validateCallback = null)
+        {
+            return Task.Run(() => Put(url, content, contentType, boundary, headers, cookies, timeout, credentials, cachePolicy, clientCert, validateCallback));
+        }
+
+        public static Task<HttpResponse> DeleteAsync(string url, WebHeaderCollection headers = null, CookieCollection cookies = null, int? timeout = null, ICredentials credentials = null, RequestCachePolicy cachePolicy = null, X509Certificate2 clientCert = null, RemoteCertificateValidationCallback validateCallback = null)
+        {
+            return Task.Run(() => Delete(url, headers, cookies, timeout, credentials, cachePolicy, clientCert, validateCallback));
         }
 
 

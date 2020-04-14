@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using ECode.Core;
 using ECode.Json;
 using ECode.TypeConversion;
@@ -9,7 +10,7 @@ using ECode.Utility;
 
 namespace ECode.Caching
 {
-    public class MemcachedCache : ICacheManager, IShardCacheManager
+    public class MemcachedCache : ICacheManager, IShardCacheManager, IDisposable
     {
         static readonly Type                TYPE_STRING         = typeof(string);
 
@@ -375,6 +376,210 @@ namespace ECode.Caching
         public bool Touch(object shardObject, string key, DateTime expired)
         {
             return Touch(null, key, (int)(expired - DateTime.Now).TotalSeconds);
+        }
+
+
+        public Task<bool> ContainsAsync(string key)
+        {
+            return Task.Run(() => Contains(key));
+        }
+
+        public Task<bool> ContainsAsync(object shardObject, string key)
+        {
+            return Task.Run(() => Contains(shardObject, key));
+        }
+
+
+        public Task<string> GetAsync(string key)
+        {
+            return Task.Run(() => Get(key));
+        }
+
+        public Task<T> GetAsync<T>(string key)
+        {
+            return Task.Run(() => Get<T>(key));
+        }
+
+        public Task<object> GetAsync(string key, Type objectType)
+        {
+            return Task.Run(() => Get(key, objectType));
+        }
+
+        public Task<string> GetAsync(object shardObject, string key)
+        {
+            return Task.Run(() => Get(shardObject, key));
+        }
+
+        public Task<T> GetAsync<T>(object shardObject, string key)
+        {
+            return Task.Run(() => Get<T>(shardObject, key));
+        }
+
+        public Task<object> GetAsync(object shardObject, string key, Type objectType)
+        {
+            return Task.Run(() => Get(shardObject, key, objectType));
+        }
+
+
+        public Task<bool> AddAsync(string key, object value, int ttl)
+        {
+            return Task.Run(() => Add(key, value, ttl));
+        }
+
+        public Task<bool> AddAsync(string key, object value, TimeSpan expired)
+        {
+            return Task.Run(() => Add(key, value, expired));
+        }
+
+        public Task<bool> AddAsync(string key, object value, DateTime expired)
+        {
+            return Task.Run(() => Add(key, value, expired));
+        }
+
+        public Task<bool> AddAsync(object shardObject, string key, object value, int ttl)
+        {
+            return Task.Run(() => Add(shardObject, key, value, ttl));
+        }
+
+        public Task<bool> AddAsync(object shardObject, string key, object value, TimeSpan expired)
+        {
+            return Task.Run(() => Add(shardObject, key, value, expired));
+        }
+
+        public Task<bool> AddAsync(object shardObject, string key, object value, DateTime expired)
+        {
+            return Task.Run(() => Add(shardObject, key, value, expired));
+        }
+
+
+        public Task<bool> SetAsync(string key, object value, int ttl)
+        {
+            return Task.Run(() => Set(key, value, ttl));
+        }
+
+        public Task<bool> SetAsync(string key, object value, TimeSpan expired)
+        {
+            return Task.Run(() => Set(key, value, expired));
+        }
+
+        public Task<bool> SetAsync(string key, object value, DateTime expired)
+        {
+            return Task.Run(() => Set(key, value, expired));
+        }
+
+        public Task<bool> SetAsync(object shardObject, string key, object value, int ttl)
+        {
+            return Task.Run(() => Set(shardObject, key, value, ttl));
+        }
+
+        public Task<bool> SetAsync(object shardObject, string key, object value, TimeSpan expired)
+        {
+            return Task.Run(() => Set(shardObject, key, value, expired));
+        }
+
+        public Task<bool> SetAsync(object shardObject, string key, object value, DateTime expired)
+        {
+            return Task.Run(() => Set(shardObject, key, value, expired));
+        }
+
+
+        public Task<bool> ReplaceAsync(string key, object value, int ttl)
+        {
+            return Task.Run(() => Replace(key, value, ttl));
+        }
+
+        public Task<bool> ReplaceAsync(string key, object value, TimeSpan expired)
+        {
+            return Task.Run(() => Replace(key, value, expired));
+        }
+
+        public Task<bool> ReplaceAsync(string key, object value, DateTime expired)
+        {
+            return Task.Run(() => Replace(key, value, expired));
+        }
+
+        public Task<bool> ReplaceAsync(object shardObject, string key, object value, int ttl)
+        {
+            return Task.Run(() => Replace(shardObject, key, value, ttl));
+        }
+
+        public Task<bool> ReplaceAsync(object shardObject, string key, object value, TimeSpan expired)
+        {
+            return Task.Run(() => Replace(shardObject, key, value, expired));
+        }
+
+        public Task<bool> ReplaceAsync(object shardObject, string key, object value, DateTime expired)
+        {
+            return Task.Run(() => Replace(shardObject, key, value, expired));
+        }
+
+
+        public Task<bool> RemoveAsync(string key)
+        {
+            return Task.Run(() => Remove(key));
+        }
+
+        public Task<bool> RemoveAsync(object shardObject, string key)
+        {
+            return Task.Run(() => Remove(shardObject, key));
+        }
+
+
+        public Task<long> IncreaseAsync(string key, int delta = 1)
+        {
+            return Task.Run(() => Increase(key, delta));
+        }
+
+        public Task<long> IncreaseAsync(object shardObject, string key, int delta = 1)
+        {
+            return Task.Run(() => Increase(shardObject, key, delta));
+        }
+
+        public Task<long> DecreaseAsync(string key, int delta = 1)
+        {
+            return Task.Run(() => Decrease(key, delta));
+        }
+
+        public Task<long> DecreaseAsync(object shardObject, string key, int delta = 1)
+        {
+            return Task.Run(() => Decrease(shardObject, key, delta));
+        }
+
+
+        public Task<bool> TouchAsync(string key, int ttl)
+        {
+            return Task.Run(() => Touch(key, ttl));
+        }
+
+        public Task<bool> TouchAsync(string key, TimeSpan expired)
+        {
+            return Task.Run(() => Touch(key, expired));
+        }
+
+        public Task<bool> TouchAsync(string key, DateTime expired)
+        {
+            return Task.Run(() => Touch(key, expired));
+        }
+
+        public Task<bool> TouchAsync(object shardObject, string key, int ttl)
+        {
+            return Task.Run(() => Touch(shardObject, key, ttl));
+        }
+
+        public Task<bool> TouchAsync(object shardObject, string key, TimeSpan expired)
+        {
+            return Task.Run(() => Touch(shardObject, key, expired));
+        }
+
+        public Task<bool> TouchAsync(object shardObject, string key, DateTime expired)
+        {
+            return Task.Run(() => Touch(shardObject, key, expired));
+        }
+
+
+        public void Dispose()
+        {
+            // ignore 
         }
     }
 }
