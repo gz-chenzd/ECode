@@ -8,6 +8,7 @@ namespace ECode.Core
         static readonly HexEncoder              HEX                 = new HexEncoder();
         static readonly HexEncoder              HEX_UPPERCASE       = new HexEncoder(true);
         static readonly Base64Encoder           BASE64              = new Base64Encoder();
+        static readonly Base64UrlEncoder        BASE64URL           = new Base64UrlEncoder();
         static readonly QuotedPrintableEncoder  QUOTED_PRINTABLE    = new QuotedPrintableEncoder();
 
 
@@ -25,6 +26,14 @@ namespace ECode.Core
             { return string.Empty; }
 
             return BASE64.Encode(bytes);
+        }
+
+        public static string ToBase64Url(this byte[] bytes)
+        {
+            if (bytes == null)
+            { return string.Empty; }
+
+            return BASE64URL.Encode(bytes);
         }
 
         public static string ToQuotedPrintable(this byte[] bytes)
@@ -67,6 +76,23 @@ namespace ECode.Core
             { return new byte[0]; }
 
             return BASE64.Decode(bytes);
+        }
+
+
+        public static byte[] FromBase64Url(this string str)
+        {
+            if (string.IsNullOrWhiteSpace(str))
+            { return new byte[0]; }
+
+            return BASE64URL.Decode(Encoding.UTF8.GetBytes(str));
+        }
+
+        public static byte[] FromBase64Url(this byte[] bytes)
+        {
+            if (bytes == null)
+            { return new byte[0]; }
+
+            return BASE64URL.Decode(bytes);
         }
 
 
