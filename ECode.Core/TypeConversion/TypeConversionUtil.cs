@@ -25,6 +25,10 @@ namespace ECode.TypeConversion
             if (sourceValue == null)
             { return null; }
 
+            if (requiredType != null
+                && Type.GetType("System.Nullable`1").Equals(requiredType.GetGenericTypeDefinition()))
+            { requiredType = requiredType.GetGenericArguments()[0]; }
+
             // if it is assignable, return the value right away
             if (IsAssignableFrom(sourceValue, requiredType))
             { return sourceValue; }
@@ -115,8 +119,7 @@ namespace ECode.TypeConversion
                         // look if it's an enum
                         if (requiredType != null
                             && requiredType.GetTypeInfo().IsEnum
-                            && (!(sourceValue is float)
-                                && (!(sourceValue is double))))
+                            && (!(sourceValue is float) && (!(sourceValue is double))))
                         {
                             // convert numeric value into enum's underlying type
                             var numericType = Enum.GetUnderlyingType(requiredType);
@@ -146,13 +149,6 @@ namespace ECode.TypeConversion
             catch (Exception ex)
             {
                 throw new TypeConvertException(sourceValue, requiredType, ex);
-            }
-
-            if (sourceValue == null
-                && (requiredType == null
-                    || !Type.GetType("System.Nullable`1").Equals(requiredType.GetGenericTypeDefinition())))
-            {
-                throw new TypeConvertException(sourceValue, requiredType);
             }
 
             return sourceValue;
