@@ -25,7 +25,7 @@ namespace ECode.TypeConversion
             if (sourceValue == null)
             { return null; }
 
-            if (requiredType != null
+            if (requiredType != null && requiredType.GetTypeInfo().IsGenericType
                 && Type.GetType("System.Nullable`1").Equals(requiredType.GetGenericTypeDefinition()))
             { requiredType = requiredType.GetGenericArguments()[0]; }
 
