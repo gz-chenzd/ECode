@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ECode.Configuration;
 using ECode.Json;
 using ECode.TypeResolution;
+using ECode.Utility;
 
 namespace ECode.Logging
 {
@@ -60,7 +61,7 @@ namespace ECode.Logging
         {
             Logger.DisableAllWrites();
 
-            foreach (var appender in appenders.Values)
+            foreach (var appender in pAppenders.Values)
             {
                 appender.Close();
             }
@@ -77,20 +78,22 @@ namespace ECode.Logging
         }
 
 
-        const string                                CONFIG_NAMESPACE_PREFIX     = "logging/";
         const string                                DEFAULT_LOGGER_NAME         = "#";
 
+        static string                               configNamespace             = "logging";
+        static string                               configKeyPrefix             = $"{configNamespace}/";
+
         static Level                                defaultLevel                = Level.ALL;
-        static List<IAppender>                      defaultAppenderRefs         = new List<IAppender>(new[] { new ConsoleAppender() });
-        static Dictionary<string, Logger>           loggers                     = new Dictionary<string, Logger>(StringComparer.InvariantCultureIgnoreCase);
-        static Dictionary<string, IAppender>        appenders                   = new Dictionary<string, IAppender>(StringComparer.InvariantCultureIgnoreCase);
+        static List<IAppender>                      pDefaultAppenderRefs        = new List<IAppender>(new[] { new ConsoleAppender() });
+        static Dictionary<string, Logger>           pLoggers                    = new Dictionary<string, Logger>(StringComparer.InvariantCultureIgnoreCase);
+        static Dictionary<string, IAppender>        pAppenders                  = new Dictionary<string, IAppender>(StringComparer.InvariantCultureIgnoreCase);
 
 
         public static Logger Default { get; } = GetLogger(DEFAULT_LOGGER_NAME);
 
 
         /// <summary>
-        /// Shorthand for <see cref="M:LogManager.GetLogger(string)"/>.
+        /// Shorthand for <see cref="GetLogger(string)"/>.
         /// </summary>
         public static Logger GetLogger(Type type)
         {
@@ -107,7 +110,7 @@ namespace ECode.Logging
             if (string.IsNullOrWhiteSpace(name))
             { name = DEFAULT_LOGGER_NAME; }
 
-            if (loggers.TryGetValue(name, out Logger logger))
+            if (pLoggers.TryGetValue(name, out Logger logger))
             {
                 return logger;
             }
@@ -118,15 +121,15 @@ namespace ECode.Logging
         [MethodImpl(MethodImplOptions.Synchronized)]
         private static Logger CreateLogger(string name)
         {
-            if (loggers.ContainsKey(name))
+            if (pLoggers.ContainsKey(name))
             {
-                return loggers[name];
+                return pLoggers[name];
             }
 
             var logger = new Logger(name, defaultLevel);
-            logger.SetAppenders(defaultAppenderRefs);
+            logger.SetAppenders(pDefaultAppenderRefs);
 
-            loggers[name] = logger;
+            pLoggers[name] = logger;
 
             return logger;
         }
@@ -136,9 +139,19 @@ namespace ECode.Logging
         static DateTime     lastChangedTime     = DateTime.MaxValue;
         static TimeSpan     delayTriggerTime    = new TimeSpan(0, 0, 0, 0, 200);
 
+        public static void Initialize(string configNamespace)
+        {
+            AssertUtil.ArgumentNotEmpty(configNamespace, nameof(configNamespace));
+
+            LogManager.configNamespace = configNamespace.Trim();
+            LogManager.configKeyPrefix = $"{LogManager.configNamespace}/";
+
+            LoadConfig();
+        }
+
         private static void OnConfigChanged(ChangedEventArgs e)
         {
-            if (!e.Key.StartsWith(CONFIG_NAMESPACE_PREFIX))
+            if (!e.Key.StartsWith(configKeyPrefix))
             { return; }
 
             lastChangedTime = DateTime.Now;
@@ -147,7 +160,7 @@ namespace ECode.Logging
             { return; }
 
             waitForReload = true;
-            Task.Factory.StartNew(() =>
+            Task.Run(() =>
             {
                 try
                 {
@@ -168,7 +181,7 @@ namespace ECode.Logging
             try
             {
                 var defaultLevel = Level.ALL;
-                var defaultLevelStr = ConfigurationManager.Get(CONFIG_NAMESPACE_PREFIX + "level");
+                var defaultLevelStr = ConfigurationManager.Get(configKeyPrefix + "level");
                 if (string.IsNullOrWhiteSpace(defaultLevelStr))
                 { LogLog.Warn("Logging config: 'level' not exists."); }
                 else
@@ -180,14 +193,14 @@ namespace ECode.Logging
                 }
 
                 var defaultAppenderRefs = new string[0];
-                var defaultAppenderRefStr = ConfigurationManager.Get(CONFIG_NAMESPACE_PREFIX + "default");
+                var defaultAppenderRefStr = ConfigurationManager.Get(configKeyPrefix + "default");
                 if (string.IsNullOrWhiteSpace(defaultAppenderRefStr))
                 { LogLog.Warn("Logging config: 'default' not exists."); }
                 else
                 { defaultAppenderRefs = JsonUtil.Deserialize<string[]>(defaultAppenderRefStr); }
 
                 var namedLoggers = new Dictionary<string, LoggerInfo>(StringComparer.InvariantCultureIgnoreCase);
-                var namedLoggersStr = ConfigurationManager.Get(CONFIG_NAMESPACE_PREFIX + "loggers");
+                var namedLoggersStr = ConfigurationManager.Get(configKeyPrefix + "loggers");
                 if (string.IsNullOrWhiteSpace(namedLoggersStr))
                 { LogLog.Warn("Logging config: 'loggers' not exists."); }
                 else
@@ -211,7 +224,7 @@ namespace ECode.Logging
                 }
 
                 var namedAppenders = new Dictionary<string, AppenderInfo>(StringComparer.InvariantCultureIgnoreCase);
-                string namedAppendersStr = ConfigurationManager.Get(CONFIG_NAMESPACE_PREFIX + "appenders");
+                var namedAppendersStr = ConfigurationManager.Get(configKeyPrefix + "appenders");
                 if (string.IsNullOrWhiteSpace(namedAppendersStr))
                 { LogLog.Warn("Logging config: 'appenders' not exists."); }
                 else
@@ -219,8 +232,8 @@ namespace ECode.Logging
                     var appenderInfos = JsonUtil.Deserialize<List<dynamic>>(namedAppendersStr);
                     foreach (var appenderInfo in appenderInfos)
                     {
-                        string name = string.Empty;
-                        string type = string.Empty;
+                        var name = string.Empty;
+                        var type = string.Empty;
                         var options = new NameValueCollection();
 
                         foreach (var keyValue in appenderInfo)
@@ -293,30 +306,33 @@ namespace ECode.Logging
         private static void LoadConfigSync(Level defaultLevel, string[] defaultAppenderRefs, Dictionary<string, LoggerInfo> namedLoggers, Dictionary<string, IAppender> parsedAppenders)
         {
             LogManager.defaultLevel = defaultLevel;
-            LogManager.appenders = parsedAppenders;
 
-            LogManager.defaultAppenderRefs.Clear();
+            pAppenders = parsedAppenders;
+
+            pDefaultAppenderRefs.Clear();
             var distinctAppenders = new HashSet<string>(defaultAppenderRefs, StringComparer.InvariantCultureIgnoreCase);
             foreach (var appenderRef in distinctAppenders)
             {
                 var appenderName = appenderRef.Trim();
                 if (parsedAppenders.ContainsKey(appenderName))
                 {
-                    LogManager.defaultAppenderRefs.Add(parsedAppenders[appenderName]);
+                    pDefaultAppenderRefs.Add(parsedAppenders[appenderName]);
                 }
             }
 
             var loggers = new Dictionary<string, Logger>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var loggerInfo in namedLoggers.Values)
             {
-                if (!LogManager.loggers.TryGetValue(loggerInfo.Name, out Logger logger))
+                if (!pLoggers.TryGetValue(loggerInfo.Name, out Logger logger))
                 { logger = new Logger(loggerInfo.Name, loggerInfo.Level); }
+                else
+                { logger.Level = loggerInfo.Level; }
 
                 var appenders = new List<IAppender>();
                 distinctAppenders = new HashSet<string>(loggerInfo.Appenders, StringComparer.InvariantCultureIgnoreCase);
                 foreach (var appenderRef in distinctAppenders)
                 {
-                    string appenderName = appenderRef.Trim();
+                    var appenderName = appenderRef.Trim();
                     if (parsedAppenders.ContainsKey(appenderName))
                     {
                         appenders.Add(parsedAppenders[appenderName]);
@@ -328,18 +344,18 @@ namespace ECode.Logging
                 loggers[logger.Name] = logger;
             }
 
-            foreach (var loggerInfo in LogManager.loggers.Values)
+            foreach (var loggerInfo in pLoggers.Values)
             {
                 if (loggers.ContainsKey(loggerInfo.Name))
                 { continue; }
 
                 loggerInfo.Level = LogManager.defaultLevel;
-                loggerInfo.SetAppenders(LogManager.defaultAppenderRefs);
+                loggerInfo.SetAppenders(pDefaultAppenderRefs);
 
                 loggers[loggerInfo.Name] = loggerInfo;
             }
 
-            LogManager.loggers = loggers;
+            pLoggers = loggers;
         }
 
         private static IAppender CreateAppender(AppenderInfo appenderInfo)

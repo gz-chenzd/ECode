@@ -74,7 +74,7 @@ namespace ECode.IO
             if (count < 0)
             { throw new ArgumentOutOfRangeException(nameof(count), $"Argument '{nameof(count)}' value must be >= 0."); }
 
-            return Task.Factory.StartNew(() =>
+            return Task.Run(() =>
             {
                 Read(fromStream, toStream, buffer, count);
             });

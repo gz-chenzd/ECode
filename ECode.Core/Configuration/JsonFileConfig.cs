@@ -7,7 +7,7 @@ using ECode.Utility;
 
 namespace ECode.Configuration
 {
-    public class JsonConfigFile : IConfigProvider
+    public class JsonFileConfig : IConfigProvider
     {
         private FileSystemWatcher   watcher                 = null;
         private bool                waitLoading             = false;
@@ -20,7 +20,7 @@ namespace ECode.Configuration
         public FileInfo ConfigFile { get; }
 
 
-        public JsonConfigFile(string fileName, bool watchChanged = true)
+        public JsonFileConfig(string fileName, bool watchChanged = true)
         {
             this.ConfigFile = new FileInfo(UtilFunctions.PathFix(fileName));
             if (!this.ConfigFile.Exists)
@@ -58,7 +58,7 @@ namespace ECode.Configuration
                 waitLoading = true;
             }
 
-            Task.Factory.StartNew(() =>
+            Task.Run(() =>
             {
                 try
                 {

@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <AssemblyVersion>1.2004.5</AssemblyVersion>
-    <FileVersion>1.2004.5</FileVersion>
-    <Version>1.2004.5</Version>
+    <AssemblyVersion>1.2004.6</AssemblyVersion>
+    <FileVersion>1.2004.6</FileVersion>
+    <Version>1.2004.6</Version>
     <Authors>chenzd</Authors>
     <Company>chenzd</Company>
     <ProjectUrl>https://github.com/gz-chenzd/ECode</ProjectUrl>
