@@ -286,7 +286,10 @@ namespace ECode.Utility
                 { request.ContentLength = 0; }
                 else
                 {
-                    request.ContentLength = content.Length - content.Position;
+                    request.ContentLength = content.Length;
+                    if (content.CanSeek)
+                    { request.ContentLength = content.Length - content.Position; }
+
                     StreamUtil.StreamCopy(content, request.GetRequestStream());
                 }
 
@@ -328,7 +331,10 @@ namespace ECode.Utility
                 { request.ContentLength = 0; }
                 else
                 {
-                    request.ContentLength = content.Length - content.Position;
+                    request.ContentLength = content.Length;
+                    if (content.CanSeek)
+                    { request.ContentLength = content.Length - content.Position; }
+
                     StreamUtil.StreamCopy(content, request.GetRequestStream());
                 }
 
